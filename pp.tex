@@ -1,0 +1,127 @@
+\documentclass[a4paper]{article}
+\usepackage{graphicx,paralist,algorithmic,times,mathptmx}
+\usepackage{algorithm,paralist}
+\usepackage{amsmath}
+% \usepackage[margin=1in]{geometry}
+
+\parskip=3pt
+\parindent=0pt
+\newcommand\fname[1]{\texttt{#1}}
+
+\title{A note on PCI addressing in the CCDB}
+\author{Juan David Gonz\'alez Cobas}
+
+\begin{document}
+\maketitle
+
+\section{Purpose and scope}
+
+The intention of this document is to give a clear explanation of the
+problem of (physically) describing PCI configurations in the CCDB.
+The current solution for VME modules is shortly described in
+section~\ref{vme}. Section~\ref{pci} describes the problems that PCI
+poses to physical addressing. The partial solutions to the problem
+current in place are explained in section~\ref{crateconfigs}.
+The last section is devoted to a proposal on how to integrate these in
+the CCDB.
+
+
+\section{VME Crate Description in the CCDB}\
+\label{vme}
+
+The configuration of VME crates in the CCDB is input via an Oracle
+form. The crucial data provided to identify a module sitting in a crate
+are
+\begin{compactitem}
+\item VME slot
+\item module type
+\item logical unit number (LUN)
+\end{compactitem}
+From this, and the declaration of the module type, we obtain the basic
+parameters needed for a driver to address the module:
+\begin{compactitem}
+\item base address(es)
+\item interrupt vector(s)
+\end{compactitem}
+These parameters are usually set up via jumpers in the boards, as
+described pictorially in images linked from the CCDB.
+
+All this information is extracted into a \fname{transfer.ref} file
+describing the boot sequence of the machine. Drivers are provided the
+necessary information at load (boot) time by their install programs;
+usually, these install programs take this information from
+\fname{transfer.ref}.
+
+Note that the information in the database is inserted or used at
+different moments
+\begin{compactitem}
+\item hardware setup time: boards are set up via jumpers, settings
+described in pictorial form
+\item crate configuration time: boards are compactenumd in an Oracle form,
+their relevant parameters described therein
+\item boot time: driver installation programs use \fname{transfer.ref}
+to extract the information relevant to them and pass it into the driver.
+\end{compactitem}
+
+From the driver point of view, the really crucial information to take
+into account is the mapping from a hardware module type and a LUN, to a
+set of module parameters like the base address:
+\begin{equation*}
+\text{HWTYPE}\quad\text{LUN} \to \text{ADDRESS}
+\end{equation*}
+Drivers and application software will correctly identify and address
+modules as long as the driver gets this mapping right.
+
+Note that in this correspondence, the physical slot (number from 1 to
+21 in a typical VME crate) is irrelevant, and is usually misconfigured
+without breaking this correspondence. However, this datum is crucial to
+locate the modules when setting up the crate, configuring it, or
+performing interventions. The use case to keep in mind is a crate with
+10 identical modules (differing only in their jumper settings) that we
+need to identify by LUN. It is crucially important that the
+correspondence between the physical slot in the crate and the LUN gets
+through the driver.
+
+\section{PCI Peripherals Geographical Description}
+\label{pci}
+
+A growing need exists for a geographical description of PCI devices
+analogous to the one shown in section~\ref{vme}.
+
+Unfortunately, addresses and module-specific configuration are
+established at boot time by the BIOS and (sometimes) the operating
+system. The practical consequence is that the closest we get to a
+physical index for a module in the PCI tree is a descriptor by bus,
+device and function number. We will refer to this triad as BDF from now
+on; suffice to say that, once the computer has booted, every PCI device
+is uniquely identified by it in a BIOS-dependent manner.
+
+The problem here is: two industrial PCs identical except for the CPU or
+even the BIOS could assign different BDF triads to the same physical
+slot in the crate.
+
+So, the BDT triad plays the same role as the physical slot in VME
+crates, but with two downsides
+\begin{compactitem}
+\item switching CPUs or BIOSes would change the mapping 
+\begin{equation*}
+\text{PHYSICAL SLOT} \leftrightarrow \text{BDF}
+\end{equation*}
+\item it is not immediately obvious what BDF corresponds to a physical
+slot, unless we go about a tedious procedure (like examining the 
+output of utilities like \fname{lspci} with different board setups)
+\end{compactitem}
+Given that the only way for a driver to tell one device from the other
+among a set of identical modules is the BDF, we are facing two problems:
+first, a CPU or BIOS change would potentially break the assumed topology
+of a system. Second, a system integrator must have some way to number
+devices that ensures the correspondence between their LUNs and their
+physical position in the crate.
+
+\section{Some fixes}
+
+\label{crateconfigs}
+
+
+\end{document}
+
