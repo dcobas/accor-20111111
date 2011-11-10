@@ -67,7 +67,7 @@ From the driver point of view, the really crucial information to take
 into account is the mapping from a hardware module type and a LUN, to a
 set of module parameters like the base address:
 \begin{equation*}
-\text{HWTYPE}\quad\text{LUN} \to \text{ADDRESS}
+\text{HWTYPE LUN} \to \text{ADDRESS}
 \end{equation*}
 Drivers and application software will correctly identify and address
 modules as long as the driver gets this mapping right.
@@ -88,27 +88,30 @@ through the driver.
 A growing need exists for a geographical description of PCI devices
 analogous to the one shown in section~\ref{vme}.
 
-Unfortunately, addresses and module-specific configuration are
-established at boot time by the BIOS and (sometimes) the operating
-system. The practical consequence is that the closest we get to a
+Unfortunately, addresses and IRQ lines are configured
+at boot time by the BIOS and (sometimes) the operating
+system after scanning the PCI bus(es).
+The practical consequence is that the closest we get to a
 physical index for a module in the PCI tree is a descriptor by bus,
 device and function number. We will refer to this triad as BDF from now
 on; suffice to say that, once the computer has booted, every PCI device
-is uniquely identified by it in a BIOS-dependent manner.
+is uniquely identified by it in a BIOS-dependent manner, and this is the
+only datum that allows a device driver to tell (otherwise identical)
+boards apart.
 
 The problem here is: two industrial PCs identical except for the CPU or
 even the BIOS could assign different BDF triads to the same physical
-slot in the crate.
+slot in a chassis.
 
 So, the BDT triad plays the same role as the physical slot in VME
 crates, but with two downsides
 \begin{compactitem}
-\item switching CPUs or BIOSes would change the mapping 
+\item switching CPUs or BIOSes would change the mapping
 \begin{equation*}
-\text{PHYSICAL SLOT} \leftrightarrow \text{BDF}
+\text{PHYSICAL-SLOT} \leftrightarrow \text{BDF}
 \end{equation*}
 \item it is not immediately obvious what BDF corresponds to a physical
-slot, unless we go about a tedious procedure (like examining the 
+slot, unless we go about a tedious procedure (like examining the
 output of utilities like \fname{lspci} with different board setups)
 \end{compactitem}
 Given that the only way for a driver to tell one device from the other
@@ -118,9 +121,53 @@ of a system. Second, a system integrator must have some way to number
 devices that ensures the correspondence between their LUNs and their
 physical position in the crate.
 
-\section{Some fixes}
+Ideally, we should have the following one-to-one correspondences among data
+\begin{equation*}
+	\text{HWTYPE LUN} \leftrightarrow
+	\text{PHYSICAL-SLOT} \leftrightarrow
+	\text{BDF}
+\end{equation*}
+The first one is usually established by the system configurator in an
+Oracle form. The second one is not under our control; we know it only
+\emph{a posteriori}, and could potentially change silently
+under our feet if a CPU or a BIOS is upgraded.
 
+Note that in the VME case, everything is simpler, because the one-to-one
+correspondence is
+\begin{equation*}
+	\text{HWTYPE LUN} \leftrightarrow
+	\text{PHYSICAL-SLOT} \leftrightarrow
+	\text{BASE-ADDRESS et al.}
+\end{equation*}
+and the board addresses etc. are under our control; we need only ensure
+they match what we configured in the database.
+
+\section{Some ways of passing BDF information to the drivers}
 \label{crateconfigs}
+
+Different solutions have been implemented to get the geographical board
+information through to the driver. The cleanest one to date is,
+probably, the use of a \url{/etc/crateconfig} file. This file is
+manually installed in a per-FEC basis for the cases where it is needed.
+What it contains is simply a table of the correspondence
+\begin{equation*}
+	\text{PHYSICAL-SLOT} \leftrightarrow \text{BDF}
+\end{equation*}
+for the particular type of crate that FEC is. As explained before, this
+mapping is highly hardware- and firmware-dependent. So, one
+\url{crateconfig} exists for every model of crate in the field.
+
+The downside of this solution is that it does not scale well by itself:
+\begin{compactitem}
+\item accurate \url{crateconfig} files have to be created on
+	a per-crate-model basis
+\item to be more precise, identical crates could be shipped with
+	differing BIOS; a specific \url{crateconfig} has to be
+	therefore supplied
+\item installing \fname{/etc/crateconfig} is a manual process
+\item all in all, it is not obvious which one of the different \fname{crateconfig}
+	files is the right one for a particular crate
+\end{compactitem}
 
 
 \end{document}
