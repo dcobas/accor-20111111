@@ -9,7 +9,7 @@ PDFFIGS=
 .fig.eps:
 	fig2dev -L eps $^ $@
 
-all: pp.pdf
+all: pp.pdf pres.pdf
 
 pp.pdf: $(PDFFIGS)
 

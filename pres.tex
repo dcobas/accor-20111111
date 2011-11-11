@@ -1,0 +1,95 @@
+\documentclass[compress,red]{beamer}
+\usetheme{Warsaw}
+\useoutertheme[subsection=false]{smoothbars}
+
+\usepackage{helvet}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{url}
+
+\usepackage{remreset}% tiny package containing just the \@removefromreset command
+\makeatletter
+\@removefromreset{subsection}{section}
+\makeatother
+\setcounter{subsection}{1}
+
+\title{Drivers and Database Aspects}
+\author{Juan David Gonz\'alez Cobas\\
+	BE/CO Device Drivers Team}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\section*{Outline}
+\begin{frame}
+\tableofcontents
+\end{frame}
+
+\section{The fate of \texttt{drivers.xml}}
+
+\begin{frame}{Driver installation process}
+In a typical VME driver scenario, a driver needs some information from
+user space to locate devices and initialize.
+
+The configuration description for the crate is in the CCDB and is
+extracted into a \url{transfer.ref} file by a program called
+\url{dscinit}
+
+This way, a device driver knows the parameters (base addresses,
+interrupt vectors, etc.) for each of the devices it has to manage
+\end{frame}
+
+\begin{frame}{The file \url{drivers.xml}}
+
+A parallel mechanism for passing this information was proposed
+(beginning 2009?) to completely describe the hardware layout of a crate
+
+It turned out to have many disadvantages
+
+\begin{itemize}
+\item inconsistencies between \url{transfer.ref} and \url{drivers.xml}
+\item incomplete representation of information
+\item need to embed an XML parser in the driver load process
+\item (mis)implementation of a complicated installation procedure
+\item introduction of superfluous dependencies
+\item \url{nmn} was right
+\end{itemize}
+
+As a consequence, the use of the \url{drivers.xml} mechanism is
+deprecated and will be migrated to a \url{transfer.ref}-based
+mechanism by Q1 2012.
+\end{frame}
+
+\begin{frame}{Discontinuation sequence for \url{drivers.xml}}
+
+\begin{description}
+\item[Jan 2012] Removal of XML-based load mechanism in CTRV, therefore
+	in all CTR drivers
+\item[Feb 2012] Full move to \url{transfer.ref}-based mechanism
+	for Skel-based, Linux drivers (CVORG, MTT, XMEM, VD80)
+\item[Apr 2012] Removal of XML-based load mechanism for Skel-based,
+	LynxOS drivers (the same)
+\end{description}
+
+From that point on, all driver installations will be based on
+information extracted via \url{transfer.ref}
+\end{frame}
+
+\section{Loading PCI drivers}
+
+\begin{frame}{Problems with PCI configuration in the CCDB}
+
+Devices in PCI buses are autodiscovered and configured at boot
+time
+
+\end{frame}
+
+\section{Other aspects}
+
+
+\end{document}
+
