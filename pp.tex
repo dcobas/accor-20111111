@@ -1,8 +1,8 @@
-\documentclass[a4paper]{article}
+\documentclass[12pt,a4paper]{article}
 \usepackage{graphicx,paralist,algorithmic,times,mathptmx}
-\usepackage{algorithm,paralist}
+\usepackage{algorithm,paralist,url}
 \usepackage{amsmath}
-% \usepackage[margin=1in]{geometry}
+\usepackage[margin=1in]{geometry}
 
 \parskip=3pt
 \parindent=0pt
@@ -57,7 +57,7 @@ different moments
 \begin{compactitem}
 \item hardware setup time: boards are set up via jumpers, settings
 described in pictorial form
-\item crate configuration time: boards are compactenumd in an Oracle form,
+\item crate configuration time: boards are enumerated in an Oracle form,
 their relevant parameters described therein
 \item boot time: driver installation programs use \fname{transfer.ref}
 to extract the information relevant to them and pass it into the driver.
@@ -70,7 +70,7 @@ set of module parameters like the base address:
 \text{HWTYPE LUN} \to \text{ADDRESS}
 \end{equation*}
 Drivers and application software will correctly identify and address
-modules as long as the driver gets this mapping right.
+their modules, as long as the device driver gets this mapping right.
 
 Note that in this correspondence, the physical slot (number from 1 to
 21 in a typical VME crate) is irrelevant, and is usually misconfigured
@@ -167,6 +167,109 @@ The downside of this solution is that it does not scale well by itself:
 \item installing \fname{/etc/crateconfig} is a manual process
 \item all in all, it is not obvious which one of the different \fname{crateconfig}
 	files is the right one for a particular crate
+\end{compactitem}
+
+\section{Configuration of PCI Devices in the CCDB}
+
+The problem described in sections~\ref{pci} and~\ref{crateconfigs} has been
+discussed informally for a long time among members of the FE, HT
+and DM sections. Within these discussions, some principles arose that
+are summarized below. As a consequence, we propose a mechanism,
+which constitutes a very primitive way of addressing
+the problem, with the intention to estimulate further discussion,
+criticism and the implementation of a definitive solution in the~CCDB
+
+\subsection{Principles}
+
+The conclusions from our discussions lead to the following principles
+\begin{compactitem}
+\item A driver for a particular HWTYPE knows how many devices of that
+type exists after scanning the bus and what their topological
+coordinates (BDF) are
+\item A driver need not know more than that, if possible
+\item After enumeration, it can export this information in many ways
+(\url{ioctl()} interfaces or, preferably, \fname{sysfs} or \fname{/dev}
+node naming) to user space
+\item As a consequence, the mapping
+\begin{equation*}
+\text{HW-TYPE LUN} \leftrightarrow \text{BDF}
+\end{equation*}
+becomes \emph{entirely} a matter of the installation (load) program,
+i.e., is dealt with entirely in user space.
+\item The mapping
+\begin{equation*}
+\text{HW-TYPE LUN} \leftrightarrow \text{PHYSICAL-SLOT}
+\end{equation*}
+is known to the equipment confirator, as it is in VME
+\item The mapping
+\begin{equation*}
+\text{BDF} \leftrightarrow \text{PHYSICAL-SLOT}
+\end{equation*}
+is set up at boot time by the BIOS, and must somehow be determined
+experimentally as a function of the bus topology (type of crate),
+CPU and BIOS. It could change over time
+\item This mapping must be made available somehow through the CCDB,
+in a way usable in the simplest form by the equipment configuration
+\item Overriding this mapping should be possible
+\end{compactitem}
+
+\subsection{Initial Proposal}
+
+Taking into account these principles, we may describe a configuration in
+the following terms.
+
+\begin{compactitem}
+\item
+A pictorial representation of the PCI slots in a type of crate (at least
+for industrial PCs and cPCI crates) is made available so that each
+physical slot is numbered inequivocally in a conventional manner.
+\item
+A table of typical mappings \`a\ la \url{crateconfig} is made available
+to users (e.g. via a dropdown list). Its choice results in a set of
+tuples
+\begin{equation*}
+(\text{PHYSICAL-SLOT}, \text{BDF})
+\end{equation*}
+made available to the user
+\item
+Some or all of these tuples can be overriden by the user by means of an
+exception mechanism analogous to the one existing for VME
+\item
+New \url{crateconfig} tables can be created as new types of PC appear or
+BIOSes are upgraded
+\item
+The file \url{/etc/crateconfig} is consequently generated at transfer
+regeneration time
+\item The latter step is actually better omitted, and the information
+concerning the BDF geographical coordinates of devices integrated in the
+\url{/etc/transfer.ref}, in a backwards-compatible manner.
+\item Then, the mapping
+\begin{equation*}
+(\text{HWTYPE LUN}, \text{BDF})
+\end{equation*}
+is already there and can be extracted by the driver load scripts, and
+used accordingly from user space libraries to correctly address devices.
+\end{compactitem}
+
+\section{Odds and Ends}
+
+First of all, this is a very tentative proposal, with many open ends. It
+should be discussed, extended and possibly discarded, but at least some
+thought should be given to
+\begin{compactitem}
+\item how to make PMC/XMC slots fit the schema, if possible
+\item how to better describe the bus topology in a computer (e.g. with
+special buses like IndustryPack or MODULBUS that are usually mastered by
+a carrier board that behaves as a bridge) inside the CCDB
+\item explore other potential changes in the
+\begin{equation*}
+(\text{PHYSICAL-SLOT}, \text{BDF})
+\end{equation*}
+that have not been taken into account
+\item Accordingly, consider the potential danger of populating the CCDB
+with mapping information that might become inaccurate over time
+\item Many others, like, for example, some radically different approach
+that has not been contemplated (yet).
 \end{compactitem}
 
 
