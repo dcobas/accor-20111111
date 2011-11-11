@@ -35,21 +35,25 @@
 In a typical VME driver scenario, a driver needs some information from
 user space to locate devices and initialize.
 
+\pause
 The configuration description for the crate is in the CCDB and is
 extracted into a \url{transfer.ref} file by a program called
 \url{dscinit}
 
+\pause
 This way, a device driver knows the parameters (base addresses,
 interrupt vectors, etc.) for each of the devices it has to manage
 \end{frame}
 
 \begin{frame}{The file \url{drivers.xml}}
 
-A parallel mechanism for passing this information was proposed
+A new mechanism for passing this information was proposed
 (beginning 2009?) to completely describe the hardware layout of a crate
 
+\pause
 It turned out to have many disadvantages
 
+\pause
 \begin{itemize}
 \item inconsistencies between \url{transfer.ref} and \url{drivers.xml}
 \item incomplete representation of information
@@ -59,6 +63,7 @@ It turned out to have many disadvantages
 \item \url{nmn} was right
 \end{itemize}
 
+\pause
 As a consequence, the use of the \url{drivers.xml} mechanism is
 deprecated and will be migrated to a \url{transfer.ref}-based
 mechanism by Q1 2012.
@@ -67,14 +72,18 @@ mechanism by Q1 2012.
 \begin{frame}{Discontinuation sequence for \url{drivers.xml}}
 
 \begin{description}
+\pause
 \item[Jan 2012] Removal of XML-based load mechanism in CTRV, therefore
 	in all CTR drivers
+\pause
 \item[Feb 2012] Full move to \url{transfer.ref}-based mechanism
 	for Skel-based, Linux drivers (CVORG, MTT, XMEM, VD80)
+\pause
 \item[Apr 2012] Removal of XML-based load mechanism for Skel-based,
 	LynxOS drivers (the same)
 \end{description}
 
+\pause
 From that point on, all driver installations will be based on
 information extracted via \url{transfer.ref}
 \end{frame}
@@ -84,10 +93,13 @@ information extracted via \url{transfer.ref}
 \begin{frame}{Problems with PCI configuration in the CCDB}
 
 \begin{itemize}
+\pause
 \item PCI devices are auto-discovered and assigned topological
 coordinates (BDF) at boot time
+\pause
 \item The pysical position of a board in a slot is very weakly related
 to its BDF coordinates (the only ones known to the drivers)
+\pause
 \item crate configuration in the CCDB associates physical position
 in crates with board identity (HWTYPE and LUN) and, therefore, its
 hardware parameters (base addresses, interrupt vectors, etc.)
@@ -98,22 +110,27 @@ hardware parameters (base addresses, interrupt vectors, etc.)
 \begin{description}
 
 
+\pause
 \item[In VME]
 \begin{equation*}
 	\text{HWTYPE LUN} \leftrightarrow
 	\text{PHYS-SLOT} \leftrightarrow
 	\text{BASE-ADDR}
 \end{equation*}
+\pause
 Everything is good and under our control
 
+\pause
 \item[In PCI]
 \begin{equation*}
 	\text{HWTYPE LUN} \leftrightarrow
 	\text{PHYS-SLOT} \leftrightarrow
 	\text{BDF}
 \end{equation*}
-The last dependency is beyond our control and implicit
+\pause
+The last dependency is \emph{implicit} (no control)
 
+\pause
 \item[To know more] Look into \\
 \url{http://wikis.cern.ch/download/attachments/38076646/pci-ccdb.pdf}
 \end{description}
@@ -121,10 +138,13 @@ The last dependency is beyond our control and implicit
 
 \begin{frame}{Proposals}
 \begin{itemize}
+\pause
 \item the problem should be tackled soon by appropriate description
 	of PCI hardware in the CCDB
+\pause
 \item a task group to tackle the problem with members from
 	FE, DM, HT should be created to discuss/implement a solution
+\pause
 \item a proposal is already sketched in the document referred above
 \end{itemize}
 \end{frame}
@@ -133,7 +153,9 @@ The last dependency is beyond our control and implicit
 
 \begin{frame}{Other aspects}
 \begin{itemize}
+\pause
 \item drivers missing/needed for the renovation process (VTSM, others?)
+\pause
 \item something else?
 \end{itemize}
 \end{frame}
