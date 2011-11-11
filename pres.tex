@@ -29,7 +29,7 @@
 \tableofcontents
 \end{frame}
 
-\section{The fate of \texttt{drivers.xml}}
+\section{Discontinuation of XML-based driver load}
 
 \begin{frame}{Driver installation process}
 In a typical VME driver scenario, a driver needs some information from
@@ -54,7 +54,7 @@ It turned out to have many disadvantages
 \item inconsistencies between \url{transfer.ref} and \url{drivers.xml}
 \item incomplete representation of information
 \item need to embed an XML parser in the driver load process
-\item (mis)implementation of a complicated installation procedure
+\item (mis)implementation of a complex install
 \item introduction of superfluous dependencies
 \item \url{nmn} was right
 \end{itemize}
@@ -83,13 +83,58 @@ information extracted via \url{transfer.ref}
 
 \begin{frame}{Problems with PCI configuration in the CCDB}
 
-Devices in PCI buses are autodiscovered and configured at boot
-time
+\begin{itemize}
+\item PCI devices are auto-discovered and assigned topological
+coordinates (BDF) at boot time
+\item The pysical position of a board in a slot is very weakly related
+to its BDF coordinates (the only ones known to the drivers)
+\item crate configuration in the CCDB associates physical position
+in crates with board identity (HWTYPE and LUN) and, therefore, its
+hardware parameters (base addresses, interrupt vectors, etc.)
+\end{itemize}
+\end{frame}
 
+\begin{frame}{VME versus PCI}
+\begin{description}
+
+
+\item[In VME]
+\begin{equation*}
+	\text{HWTYPE LUN} \leftrightarrow
+	\text{PHYS-SLOT} \leftrightarrow
+	\text{BASE-ADDR}
+\end{equation*}
+Everything is good and under our control
+
+\item[In PCI]
+\begin{equation*}
+	\text{HWTYPE LUN} \leftrightarrow
+	\text{PHYS-SLOT} \leftrightarrow
+	\text{BDF}
+\end{equation*}
+The last dependency is beyond our control and implicit
+
+\item[To know more] Look into \\
+\url{http://wikis.cern.ch/download/attachments/38076646/pci-ccdb.pdf}
+\end{description}
+\end{frame}
+
+\begin{frame}{Proposals}
+\begin{itemize}
+\item the problem should be tackled soon by appropriate description
+	of PCI hardware in the CCDB
+\item a task group to tackle the problem with members from
+	FE, DM, HT should be created to discuss/implement a solution
+\item a proposal is already sketched in the document referred above
+\end{itemize}
 \end{frame}
 
 \section{Other aspects}
 
+\begin{itemize}
+\item drivers missing/needed for the renovation process (VTSM, others?)
+\item something else?
+\end{itemize}
 
 \end{document}
 
