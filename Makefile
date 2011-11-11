@@ -14,5 +14,5 @@ all: pp.pdf pres.pdf
 pp.pdf: $(PDFFIGS)
 
 clean:
-	rm -f *.aux *.log *.pdf *.eps *.bak *.dvi
-
+	rm -f *.aux *.log *.pdf *.eps *.bak *.dvi \
+		*.nav *.out *.snm *.toc
